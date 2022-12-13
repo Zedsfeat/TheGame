@@ -9,6 +9,7 @@ port = 5060
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((host, port))
 server.listen()
+list_num = dict()
 
 
 class Player:
@@ -88,8 +89,22 @@ def game_broadcast(game: Game, message):
 #     for player in game.players:
 #         player.client.send(message.encode('ascii'))
 
+def handle2(player: Player):
+
+    while True:
+        try:
+            message = player.client.recv(1024).decode('ascii')
+            # game_broadcast(player.game, message)
+            print(message)
+        except:
+            # game = player.game
+            # game.remove_player(player)
+            # game_broadcast(game, "Wait for new opponent...")
+            # players.pop(player.id)
+            break
 
 def handle(player: Player):
+
     req = -1
     player.client.send("1. Create Game\n"
                        "2. Join the Game".encode('ascii'))
@@ -136,16 +151,18 @@ def receive():
         print("Connected with {}".format(str(address)))
 
         # Запрос и получение никнейма
-        client.send('Write nickname: '.encode('ascii'))
         nickname = client.recv(1024).decode('ascii')
 
         # Создание игрока
         player = Player(nickname, client)
         players[player.id] = player
 
+
+
         print("PLayer " + player.__str__() + " was created!")
 
-        thread = threading.Thread(target=handle, args=(player,))
+        handle2(player)
+        thread = threading.Thread(target=handle2, args=(player,))
         thread.start()
 
 receive()

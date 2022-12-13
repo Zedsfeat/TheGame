@@ -22,13 +22,12 @@ class Client:
         self.my_step = None
 
     # Функция отправления сообщений на сервер
-    def write(self):
+    def write(self, info):
         # цикл, который всегда ожидает ввода от пользователя
         while True:
             # Как только он их получает, он объединяет их с никнеймом и отправляет на сервер.
             if self.my_step is True or self.my_step is None:
-                message = '{}: {}'.format(nickname, input(''))
-                client.send(message.encode('ascii'))
+                client.send(info.encode('ascii'))
 
     # Функция, прослушивающая сервер и отправляющая сообщения
     def receive(self):
