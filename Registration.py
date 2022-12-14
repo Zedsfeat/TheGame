@@ -1,10 +1,39 @@
 import sys
 import socket
+import threading
 
 from PyQt6 import QtCore, QtGui, QtWidgets
+import time
+
+# TODO: отправлять на сервер инфу, что окно закрылось
+from PyQt6.QtCore import pyqtSignal, QThread
 
 from UI_Game import Ui_GameWindow
 from UI_Registration import Ui_RegistrationView
+
+STARTER = None
+
+class ThreadForFunc(QThread):
+
+    mysignal = QtCore.pyqtSignal(str)
+
+    def __init__(self, parent = None):
+        super(ThreadForFunc, self).__init__(parent)
+
+    def run(self):
+        while True:
+            try:
+                message_from_server = client.recv(1024).decode('ascii')
+                print(message_from_server)
+                if "game_started" in message_from_server:
+                    print("leted")
+                    self.mysignal.emit("start")
+                if "Button" in message_from_server:
+                    self.mysignal.emit(message_from_server)
+            except:
+                print("Error!")
+                return "error"
+
 
 class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
 
@@ -14,31 +43,66 @@ class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
 
         self.count = 0
 
+        self.thread = None
+
         self.create_button.clicked.connect(self.add_functions)
+
+
 
     def add_functions(self):
         if self.nickname_line_edit.text() != "":
 
-
-            self.gw = Game()
             nickname = self.nickname_line_edit.text()
+            self.gw = Game(nickname)
             client.send(nickname.encode("ascii"))
             self.gw.nameLabel.setText(f"{nickname}'s")
             self.nickname_line_edit.setStyleSheet("border: 2px solid #FFFFFF;border-radius: 15px;background: #FFFFFF;color: rgb(113, 113, 118);")
-            self.create_button.setText("Game created")
-            self.create_button.setStyleSheet("border-radius: 15px;background: #73AD21;border: 2px solid #FFFFFF; color: #FFFFFF")
 
+            # TODO: добавить текст wait for opponent
+            client.send(f"{nickname}:gaming".encode("ascii"))
+            self.create_button.setText("Wait for opponent")
+            self.create_button.setStyleSheet("width:40px;border-radius: 15px;background: #73AD21;border: 2px solid #FFFFFF; color: #FFFFFF")
+            self.create_button.setEnabled(False)
 
-            self.count += 1
-            if self.count == 2:
-                self.gw.show()
-                self.gw.nullify()
-                self.count = 0
-                self.create_button.setStyleSheet("border: 2px solid #FFFFFF;border-radius: 15px;background: #FFFFFF;color: rgb(113, 113, 118);")
-                self.create_button.setText("Create game")
+            self.thread = ThreadForFunc()
+            self.thread.start()
+            self.thread.mysignal.connect(self.handle_signal)
+
         else:
             self.nickname_line_edit.setStyleSheet("border: 2px solid #FF0000;border-radius: 15px;background: #FFFFFF;color: rgb(113, 113, 118);")
 
+    def handle_signal(self, value:str):
+
+        if value == "start":
+            self.lets_game()
+        if "Button" in value:
+            print(f"do {value}")
+            for k, v in self.gw.buttons_dict.items():
+                print(k, v)
+                if v in value:
+                    print(f"zahodit {v} {value}")
+                    self.gw.push_button_to_game(k, value)
+                    break
+
+    def start_game(self):
+
+        while True:
+            try:
+                message_from_server = client.recv(1024).decode('ascii')
+                print(message_from_server)
+                if message_from_server == "game_started":
+                    print("leted")
+                    global STARTER
+                    STARTER = "true"
+                    return
+            except:
+                print("Error!")
+                return "error"
+
+    def lets_game(self):
+        self.gw.show()
+        self.gw.nullify()
+        self.close()
 
 class Game(QtWidgets.QMainWindow, Ui_GameWindow):
     buttons_dict = dict()
@@ -48,12 +112,12 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
     flag_for_win = True
     flag_for_cell_empty = True
 
-    def __init__(self):
+    def __init__(self, nick):
         super().__init__()
         self.setupUi(self)
 
-        print(client.__hash__())
-        client.send("Test".encode("ascii"))
+        self.nickname = nick
+        self.my_step = None
 
         self.count_for_leave = 0
         self.count_for_restart = 0
@@ -71,6 +135,23 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
             self.buttons_dict[button] = f"Button_{count}"
 
         self.add_functions()
+
+    def listen_server(self):
+        while True:
+            try:
+                # если сообщение «NICK», оно не печатается, а отправляет свой псевдоним на сервер.
+                message = client.recv(1024).decode('ascii')
+                if message == 'true':
+                    self.my_step = True
+                elif message == 'false':
+                    self.my_step = False
+                else:
+                    print(message)
+            except:
+                # В случае какой-либо ошибки мы закрываем соединение и разрываем цикл
+                print("Error!")
+                client.close()
+                break
 
     def add_functions(self):
         self.pushButton.clicked.connect(lambda: self.setup_game(self.pushButton))
@@ -99,6 +180,7 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
         self.surrender_button.setStyleSheet("border-radius: 15px;background: #73AD21;border: 2px solid #FFFFFF; color: #FFFFFF")
         self.surrender_button.setText("Sure?")
         if self.count_for_leave == 2:
+            client.send(f"{self.nickname}:leave".encode("ascii"))
             self.moveLabel.setText("conceded")
 
             if self.nameLabel.text()[-2:] == "'s":
@@ -119,6 +201,7 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
             self.nullify()
             self.restart_button.setText("Restart")
             self.restart_button.setStyleSheet("border: 2px solid #FFFFFF;border-radius: 15px;background: #FFFFFF;color: rgb(113, 113, 118);")
+            client.send("restart".encode("ascii"))
             self.count_for_restart = 0
 
 
@@ -128,7 +211,7 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
         global buttons_array
         global flag_for_cell_empty
 
-        client.send(self.buttons_dict[button].encode("ascii"))
+
 
         if self.nameLabel.text()[-2:] != "'s":
             self.nameLabel.setText(f"{self.nameLabel.text()}'s")
@@ -150,9 +233,11 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
 
                     self.moveLabel.setText("move")
 
-
+                self.buttons_dict[button] = self.buttons_dict[button] + " " + button.text()
                 self.queue_dict[button] = button.text()
                 self.queue_array.append(button)
+
+                client.send(self.buttons_dict[button].encode("ascii"))
 
                 if len(self.queue_array) == 16 and self.flag_for_win:
                     self.nameLabel.setText("Draw")
@@ -166,6 +251,20 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
                     print("Cell is empty")
                 else:
                     self.nullify()
+
+    def push_button_to_game(self, button, button_dict_value):
+        print(button, button.text(), button_dict_value, self.queue_dict[button])
+        if self.queue_dict[button] == "":
+            if button_dict_value[-1] == "X":
+                button.setStyleSheet("border-radius: 25px;background: rgb(237, 51, 65);border: 2px solid #FFFFFF;")
+                button.setText("X")
+                self.moveLabel.setText("move")
+            elif button_dict_value[-1] == "O":
+                button.setStyleSheet("border-radius: 25px;background: #73AD21;border: 2px solid #FFFFFF;")
+                button.setText("O")
+                self.moveLabel.setText("move")
+
+            self.queue_dict[button] = button.text()
 
     def check_win(self):
         global flag_for_win
@@ -220,6 +319,8 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
         self.restart_button.setText("Restart")
         self.restart_button.setStyleSheet("border: 2px solid #FFFFFF;border-radius: 15px;background: #FFFFFF;color: rgb(113, 113, 118);")
 
+        thread = threading.Thread(target=self.listen_server)
+        thread.start()
 
         for button in self.queue_array:
             button.setStyleSheet("border-radius: 25px;""background: #FFFFFF;""border: 2px solid #FFFFFF;")

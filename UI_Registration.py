@@ -62,7 +62,7 @@ class Ui_RegistrationView(object):
         RegistrationView.setWindowTitle(_translate("RegistrationView", "MainWindow"))
         self.title_label.setText(_translate("RegistrationView", "Enter your\n"
 "nickname"))
-        self.create_button.setText(_translate("RegistrationView", "Create game"))
+        self.create_button.setText(_translate("RegistrationView", "Game"))
 
 
 if __name__ == "__main__":
