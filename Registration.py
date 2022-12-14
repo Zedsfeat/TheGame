@@ -29,7 +29,6 @@ class ThreadForFunc(QThread):
                     print("leted")
                     self.mysignal.emit("start")
                 elif "Button" in message_from_server:
-                    print("BUTTONED")
                     self.mysignal.emit(message_from_server)
             except:
                 print("Error!")
@@ -47,7 +46,6 @@ class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
         self.thread = None
 
         self.create_button.clicked.connect(self.add_functions)
-
 
 
     def add_functions(self):
@@ -77,10 +75,8 @@ class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
         if value == "start":
             self.lets_game()
         if "Button" in value:
-            print(f"do {value}")
             for k, v in self.gw.buttons_dict.items():
-                print(k, v)
-                if v in value:
+                if v == value.split()[0]:
                     print(f"zahodit {v} {value}")
                     self.gw.push_button_to_game(k, value)
                     break
@@ -223,7 +219,7 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
                     self.nullify()
 
     def push_button_to_game(self, button, button_dict_value):
-        print(button, button.text(), button_dict_value, self.queue_dict[button])
+        print("push_to_game", button, button.text(), button_dict_value, self.queue_dict[button])
         if self.queue_dict[button] == "":
             if button_dict_value[-1] == "X":
                 button.setStyleSheet("border-radius: 25px;background: rgb(237, 51, 65);border: 2px solid #FFFFFF;")

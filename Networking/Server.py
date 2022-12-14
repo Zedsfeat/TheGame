@@ -132,47 +132,6 @@ def handle2(player: Player):
 
             break
 
-# def handle(player: Player):
-#
-#     req = -1
-#     player.client.send("1. Create Game\n"
-#                        "2. Join the Game".encode('ascii'))
-#     while req not in [1, 2]:
-#         try:
-#             req = int(player.client.recv(1024).decode('ascii').split()[1])
-#         except ValueError:
-#             req = -1
-#             player.client.send("1. Create Game\n"
-#                                "2. Join the Game".encode('ascii'))
-#     if req == 1:
-#         game = Game(player)
-#         player.set_game(game)
-#         games[game.id] = game
-#         print(f"Game {game} was created")
-#         player.client.send("Wait for opponent...".encode('ascii'))
-#     else:
-#         game_chosen_id = -1
-#         free_games = {k: v for k, v in games.items() if len(v.players) == 1}
-#         while game_chosen_id not in free_games.keys():
-#             player.client.send(dict_string(free_games).encode('ascii'))
-#             try:
-#                 game_chosen_id = int(player.client.recv(1024).decode('ascii').split()[1])
-#                 games[game_chosen_id].set_player(player)
-#                 player.set_game(games[game_chosen_id])
-#             except Exception:
-#                 game_chosen_id = -1
-#                 free_games = {k: v for k, v in games.items() if len(v.players) == 1}
-#     while True:
-#         try:
-#             message = player.client.recv(1024).decode('ascii')
-#             game_broadcast(player.game, message)
-#         except:
-#             game = player.game
-#             game.remove_player(player)
-#             game_broadcast(game, "Wait for new opponent...")
-#             players.pop(player.id)
-#             break
-
 
 def receive():
     while True:
