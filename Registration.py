@@ -28,7 +28,8 @@ class ThreadForFunc(QThread):
                 if "game_started" in message_from_server:
                     print("leted")
                     self.mysignal.emit("start")
-                if "Button" in message_from_server:
+                elif "Button" in message_from_server:
+                    print("BUTTONED")
                     self.mysignal.emit(message_from_server)
             except:
                 print("Error!")
@@ -84,21 +85,6 @@ class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
                     self.gw.push_button_to_game(k, value)
                     break
 
-    def start_game(self):
-
-        while True:
-            try:
-                message_from_server = client.recv(1024).decode('ascii')
-                print(message_from_server)
-                if message_from_server == "game_started":
-                    print("leted")
-                    global STARTER
-                    STARTER = "true"
-                    return
-            except:
-                print("Error!")
-                return "error"
-
     def lets_game(self):
         self.gw.show()
         self.gw.nullify()
@@ -136,22 +122,6 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
 
         self.add_functions()
 
-    def listen_server(self):
-        while True:
-            try:
-                # если сообщение «NICK», оно не печатается, а отправляет свой псевдоним на сервер.
-                message = client.recv(1024).decode('ascii')
-                if message == 'true':
-                    self.my_step = True
-                elif message == 'false':
-                    self.my_step = False
-                else:
-                    print(message)
-            except:
-                # В случае какой-либо ошибки мы закрываем соединение и разрываем цикл
-                print("Error!")
-                client.close()
-                break
 
     def add_functions(self):
         self.pushButton.clicked.connect(lambda: self.setup_game(self.pushButton))
@@ -318,9 +288,6 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
         self.surrender_button.setStyleSheet("border: 2px solid #FFFFFF;border-radius: 15px;background: #FFFFFF;color: rgb(113, 113, 118);")
         self.restart_button.setText("Restart")
         self.restart_button.setStyleSheet("border: 2px solid #FFFFFF;border-radius: 15px;background: #FFFFFF;color: rgb(113, 113, 118);")
-
-        thread = threading.Thread(target=self.listen_server)
-        thread.start()
 
         for button in self.queue_array:
             button.setStyleSheet("border-radius: 25px;""background: #FFFFFF;""border: 2px solid #FFFFFF;")
