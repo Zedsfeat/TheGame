@@ -4,11 +4,11 @@ import socket
 import threading
 
 host = '127.0.0.1'
-port = 5060
+port = 5063
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((host, port))
-server.listen(2)
+server.listen(0)
 list_num = dict()
 
 
@@ -76,8 +76,8 @@ def dict_string(some_dict):
 
 def game_broadcast(game: Game, message):
     counter = 0
-    step_on = "true"
-    step_off = "false"
+    step_on = ""
+    step_off = ""
     for player in game.players:
         player.client.send(message.encode('ascii'))
         if counter == game.step_counter:
@@ -110,18 +110,19 @@ def handle2(player: Player):
                     games[game.id] = game
                     player.set_game(game)
                 print(games)
-            if "leave" in message:
-                pass
-            if "Button" in message:
+            elif "leave" in message:
+                print("leave")
+            elif "Button" in message:
                 if player.game is not None:
                     game_broadcast(player.game, message)
                 else:
                     print("No game of user")
-            if message == "restart":
+            elif "Restart" in message:
+                restart_count += 1
                 if restart_count == 2:
-                    pass
-                else:
-                    restart_count += 1
+                    restart_count = 0
+                    player.client.send(message.encode("ascii"))
+                    
         except:
             game = player.game
             if game is not None:
@@ -151,4 +152,3 @@ def receive():
         thread.start()
 
 receive()
-

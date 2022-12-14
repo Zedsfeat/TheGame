@@ -26,10 +26,13 @@ class ThreadForFunc(QThread):
                 message_from_server = client.recv(1024).decode('ascii')
                 print(message_from_server)
                 if "game_started" in message_from_server:
-                    print("leted")
-                    self.mysignal.emit("start")
+                    self.mysignal.emit("Start")
                 elif "Button" in message_from_server:
                     self.mysignal.emit(message_from_server)
+                elif "Restart" in message_from_server:
+                    self.mysignal.emit("Restart")
+                else:
+                    print(1)
             except:
                 print("Error!")
                 return "error"
@@ -71,15 +74,18 @@ class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
             self.nickname_line_edit.setStyleSheet("border: 2px solid #FF0000;border-radius: 15px;background: #FFFFFF;color: rgb(113, 113, 118);")
 
     def handle_signal(self, value:str):
+        global buttons_dict
 
-        if value == "start":
+        if value == "Start":
             self.lets_game()
-        if "Button" in value:
+        elif "Button" in value:
             for k, v in self.gw.buttons_dict.items():
                 if v == value.split()[0]:
-                    print(f"zahodit {v} {value}")
                     self.gw.push_button_to_game(k, value)
                     break
+        elif value == "Restart":
+            self.gw.restart_game()
+
 
     def lets_game(self):
         self.gw.show()
@@ -160,6 +166,7 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
 
 
     def restart_game(self):
+        global buttons_dict
         self.count_for_restart += 1
         self.restart_button.setStyleSheet("border-radius: 15px;background: #73AD21;border: 2px solid #FFFFFF; color: #FFFFFF")
         self.restart_button.setText("Sure?")
@@ -167,8 +174,10 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
             self.nullify()
             self.restart_button.setText("Restart")
             self.restart_button.setStyleSheet("border: 2px solid #FFFFFF;border-radius: 15px;background: #FFFFFF;color: rgb(113, 113, 118);")
-            client.send("restart".encode("ascii"))
+            client.send("Restart".encode("ascii"))
             self.count_for_restart = 0
+            for k in self.buttons_dict.keys():
+                self.buttons_dict[k] = self.buttons_dict[k].split()[0]
 
 
     def setup_game(self, button: QtWidgets.QPushButton):
@@ -199,7 +208,8 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
 
                     self.moveLabel.setText("move")
 
-                self.buttons_dict[button] = self.buttons_dict[button] + " " + button.text()
+                
+                self.buttons_dict[button] = self.buttons_dict[button].split()[0] + " " + button.text()
                 self.queue_dict[button] = button.text()
                 self.queue_array.append(button)
 
@@ -219,6 +229,8 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
                     self.nullify()
 
     def push_button_to_game(self, button, button_dict_value):
+        global queue_array
+        global queue_dict
         print("push_to_game", button, button.text(), button_dict_value, self.queue_dict[button])
         if self.queue_dict[button] == "":
             if button_dict_value[-1] == "X":
@@ -231,6 +243,7 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
                 self.moveLabel.setText("move")
 
             self.queue_dict[button] = button.text()
+            self.queue_array.append(button)
 
     def check_win(self):
         global flag_for_win
@@ -299,9 +312,12 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
         self.nameLabel.setStyleSheet("color: #FFFFFF")
         self.moveLabel.setText("move")
 
+        for k in self.buttons_dict.keys():
+            self.buttons_dict[k] = self.buttons_dict[k].split()[0]
+
 if __name__ == "__main__":
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(('127.0.0.1', 5060))
+    client.connect(('127.0.0.1', 5063))
     app = QtWidgets.QApplication(sys.argv)
     rw = Registration()
     rw.show()
