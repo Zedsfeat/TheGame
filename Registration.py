@@ -60,7 +60,6 @@ class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
             self.gw.nameLabel.setText(f"{nickname}'s")
             self.nickname_line_edit.setStyleSheet("border: 2px solid #FFFFFF;border-radius: 15px;background: #FFFFFF;color: rgb(113, 113, 118);")
 
-            # TODO: добавить текст wait for opponent
             client.send(f"{nickname}:gaming".encode("ascii"))
             self.create_button.setText("Wait for opponent")
             self.create_button.setStyleSheet("width:40px;border-radius: 15px;background: #73AD21;border: 2px solid #FFFFFF; color: #FFFFFF")
@@ -84,7 +83,7 @@ class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
                     self.gw.push_button_to_game(k, value)
                     break
         elif value == "Restart":
-            self.gw.restart_game()
+            self.gw.full_restart()
 
 
     def lets_game(self):
@@ -166,27 +165,26 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
 
 
     def restart_game(self):
-        global buttons_dict
         self.count_for_restart += 1
         self.restart_button.setStyleSheet("border-radius: 15px;background: #73AD21;border: 2px solid #FFFFFF; color: #FFFFFF")
-        self.restart_button.setText("Sure?")
+        if self.count_for_restart == 1:
+            self.restart_button.setText("Sure?")
         if self.count_for_restart == 2:
-            self.nullify()
-            self.restart_button.setText("Restart")
-            self.restart_button.setStyleSheet("border: 2px solid #FFFFFF;border-radius: 15px;background: #FFFFFF;color: rgb(113, 113, 118);")
             client.send("Restart".encode("ascii"))
-            self.count_for_restart = 0
-            for k in self.buttons_dict.keys():
-                self.buttons_dict[k] = self.buttons_dict[k].split()[0]
+            self.restart_button.setText("Restart wait")
+            self.restart_button.setEnabled(False)
+
+
+    def full_restart(self):
+        self.nullify()
+        self.restart_button.setStyleSheet(
+            "border: 2px solid #FFFFFF;border-radius: 15px;background: #FFFFFF;color: rgb(113, 113, 118);")
+        self.count_for_restart = 0
+        for k in self.buttons_dict.keys():
+            self.buttons_dict[k] = self.buttons_dict[k].split()[0]
 
 
     def setup_game(self, button: QtWidgets.QPushButton):
-        global queue_dict
-        global queue_array
-        global buttons_array
-        global flag_for_cell_empty
-
-
 
         if self.nameLabel.text()[-2:] != "'s":
             self.nameLabel.setText(f"{self.nameLabel.text()}'s")
@@ -229,8 +227,6 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
                     self.nullify()
 
     def push_button_to_game(self, button, button_dict_value):
-        global queue_array
-        global queue_dict
         print("push_to_game", button, button.text(), button_dict_value, self.queue_dict[button])
         if self.queue_dict[button] == "":
             if button_dict_value[-1] == "X":
@@ -283,10 +279,6 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
 
 
     def nullify(self):
-        global queue_array
-        global queue_dict
-        global flag_for_win
-        global flag_for_cell_empty
 
         self.flag_for_win = True
         self.flag_for_cell_empty = True
@@ -294,8 +286,10 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
         self.count_for_restart = 0
 
         self.surrender_button.setText("Leave")
+        self.restart_button.setEnabled(True)
         self.surrender_button.setStyleSheet("border: 2px solid #FFFFFF;border-radius: 15px;background: #FFFFFF;color: rgb(113, 113, 118);")
         self.restart_button.setText("Restart")
+        self.restart_button.setEnabled(True)
         self.restart_button.setStyleSheet("border: 2px solid #FFFFFF;border-radius: 15px;background: #FFFFFF;color: rgb(113, 113, 118);")
 
         for button in self.queue_array:

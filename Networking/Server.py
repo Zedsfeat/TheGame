@@ -43,6 +43,7 @@ class Game:
         self.id = Game.counter
         self.players = [player]
         self.step_counter = random.choice([0, 1])
+        self.restart_count = 0
 
     def set_player(self, player: Player):
         if len(self.players) >= 2:
@@ -93,7 +94,6 @@ def game_broadcast(game: Game, message):
 #         player.client.send(message.encode('ascii'))
 
 def handle2(player: Player):
-    restart_count = 0
     while True:
         try:
             message = player.client.recv(1024).decode('ascii')
@@ -118,10 +118,10 @@ def handle2(player: Player):
                 else:
                     print("No game of user")
             elif "Restart" in message:
-                restart_count += 1
-                if restart_count == 2:
-                    restart_count = 0
-                    player.client.send(message.encode("ascii"))
+                player.game.restart_count += 1
+                if player.game.restart_count == 2:
+                    player.game.restart_count = 0
+                    game_broadcast(player.game, message)
                     
         except:
             game = player.game
