@@ -87,7 +87,10 @@ def game_broadcast(game: Game, message):
     counter = 0
     step_on = "true"
     step_off = "false"
-    if message == "game_started":
+    if "Restart1" in message:
+        for player in game.players:
+            player.client.send(message.encode('ascii'))
+    elif message == "game_started" or "Restart2" in message:
         for player in game.players:
             player.client.send(message.encode('ascii'))
             time.sleep(0.2)
