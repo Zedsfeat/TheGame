@@ -119,9 +119,11 @@ def handle2(player: Player):
                     print("No game of user")
             elif "Restart" in message:
                 player.game.restart_count += 1
+                if player.game.restart_count == 1:
+                    game_broadcast(player.game, message + "1")
                 if player.game.restart_count == 2:
                     player.game.restart_count = 0
-                    game_broadcast(player.game, message)
+                    game_broadcast(player.game, message+"2")
                     
         except:
             game = player.game

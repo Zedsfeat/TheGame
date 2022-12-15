@@ -30,7 +30,7 @@ class ThreadForFunc(QThread):
                 elif "Button" in message_from_server:
                     self.mysignal.emit(message_from_server)
                 elif "Restart" in message_from_server:
-                    self.mysignal.emit("Restart")
+                    self.mysignal.emit(message_from_server)
                 else:
                     print(1)
             except:
@@ -82,7 +82,9 @@ class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
                 if v == value.split()[0]:
                     self.gw.push_button_to_game(k, value)
                     break
-        elif value == "Restart":
+        elif value == "Restart1":
+            self.gw.restart_game()
+        elif value == "Restart2":
             self.gw.full_restart()
 
 
@@ -163,12 +165,11 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
             self.count_for_leave = 0
             self.close()
 
-
     def restart_game(self):
         self.count_for_restart += 1
         self.restart_button.setStyleSheet("border-radius: 15px;background: #73AD21;border: 2px solid #FFFFFF; color: #FFFFFF")
         if self.count_for_restart == 1:
-            self.restart_button.setText("Sure?")
+            self.restart_button.setText("Restart?")
         if self.count_for_restart == 2:
             client.send("Restart".encode("ascii"))
             self.restart_button.setText("Restart wait")
