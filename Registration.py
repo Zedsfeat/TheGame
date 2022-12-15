@@ -33,6 +33,10 @@ class ThreadForFunc(QThread):
                     self.mysignal.emit(message_from_server)
                 elif "Leave" in message_from_server:
                     self.mysignal.emit("Leave")
+                elif "true" in message_from_server:
+                    self.mysignal.emit("true")
+                elif "false" in message_from_server:
+                    self.mysignal.emit("false")
                 else:
                     print(1)
             except:
@@ -90,6 +94,10 @@ class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
             self.gw.full_restart()
         elif value == "Leave":
             self.gw.leaved()
+        elif value == "true":
+            self.gw.enable_all()
+        elif value == "false":
+            self.gw.block_all()
 
 
     def lets_game(self):
@@ -133,6 +141,14 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
         self.nullify()
         rw.show()
         self.close()
+
+    def block_all(self):
+        for btn in self.buttons_array:
+            btn.setEnabled(False)
+
+    def enable_all(self):
+        for btn in self.buttons_array:
+            btn.setEnabled(True)
 
     def add_functions(self):
         self.pushButton.clicked.connect(lambda: self.setup_game(self.pushButton))

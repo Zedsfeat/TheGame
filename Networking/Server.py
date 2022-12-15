@@ -2,6 +2,7 @@ import os
 import random
 import socket
 import threading
+import time
 
 host = '127.0.0.1'
 port = 5063
@@ -84,10 +85,11 @@ def dict_string(some_dict):
 
 def game_broadcast(game: Game, message):
     counter = 0
-    step_on = ""
-    step_off = ""
+    step_on = "true"
+    step_off = "false"
     for player in game.players:
         player.client.send(message.encode('ascii'))
+        time.sleep(0.2)
         if counter == game.step_counter:
             player.client.send(step_on.encode('ascii'))
         else:
