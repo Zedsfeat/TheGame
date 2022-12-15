@@ -39,14 +39,13 @@ class ThreadForFunc(QThread):
                     self.mysignal.emit("true")
                 elif "false" in message_from_server:
                     self.mysignal.emit("false")
-
                 elif "wins" in message_from_server:
                     self.mysignal.emit(message_from_server)
                 elif "Draw" in message_from_server:
                     self.mysignal.emit(message_from_server)
             except:
                 print("Error!")
-                return "error"
+                self.mysignal.emit("ERROR")
 
 
 class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
@@ -104,17 +103,24 @@ class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
             self.gw.leaved()
         elif value == "true":
             self.gw.enable_all()
+            self.gw.nameLabel.setText(f"{nickname_change}'s")
+            self.gw.moveLabel.setText("move")
         elif value == "false":
             self.gw.block_all()
+            self.gw.nameLabel.setText(f"{nickname_change}")
+            self.gw.moveLabel.setText("muted")
         elif "wins" in value:
-            # TODO Блокировка всех кнопок
+            self.gw.block_all()
             if self.gw.queue_array[-1].text() == value.split()[-1]:
                 self.gw.nameLabel.setText(f"{value.split()[0]}")
                 self.gw.moveLabel.setText("wins 🥳")
         elif "Draw" in value:
-            # TODO Блокировка всех кнопок
+            self.gw.block_all()
             self.gw.nameLabel.setText(f"{value}")
             self.gw.moveLabel.setText("")
+        elif "ERROR" in value:
+            self.gw.close()
+
 
 
     def lets_game(self):

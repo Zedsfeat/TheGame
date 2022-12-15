@@ -5,7 +5,7 @@ import threading
 import time
 
 host = '127.0.0.1'
-port = 5072
+port = 5063
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((host, port))
@@ -88,12 +88,13 @@ def game_broadcast(game: Game, message):
     step_on = "true"
     step_off = "false"
     for player in game.players:
-        player.client.send(message.encode('ascii'))
-        time.sleep(0.2)
+
         if counter == game.step_counter:
             player.client.send(step_on.encode('ascii'))
         else:
             player.client.send(step_off.encode('ascii'))
+        time.sleep(0.2)
+        player.client.send(message.encode('ascii'))
         counter += 1
     game.step_counter = (game.step_counter + 1) % 2
 
