@@ -87,16 +87,26 @@ def game_broadcast(game: Game, message):
     counter = 0
     step_on = "true"
     step_off = "false"
-    for player in game.players:
-
-        if counter == game.step_counter:
-            player.client.send(step_on.encode('ascii'))
-        else:
-            player.client.send(step_off.encode('ascii'))
-        time.sleep(0.2)
-        player.client.send(message.encode('ascii'))
-        counter += 1
-    game.step_counter = (game.step_counter + 1) % 2
+    if message == "game_started":
+        for player in game.players:
+            player.client.send(message.encode('ascii'))
+            time.sleep(0.2)
+            if counter == game.step_counter:
+                player.client.send(step_on.encode('ascii'))
+            else:
+                player.client.send(step_off.encode('ascii'))
+            counter += 1
+        game.step_counter = (game.step_counter + 1) % 2
+    else:
+        for player in game.players:
+            if counter == game.step_counter:
+                player.client.send(step_on.encode('ascii'))
+            else:
+                player.client.send(step_off.encode('ascii'))
+            time.sleep(0.2)
+            player.client.send(message.encode('ascii'))
+            counter += 1
+        game.step_counter = (game.step_counter + 1) % 2
 
 
 # def broadcast(game: Game, message):
