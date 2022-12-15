@@ -59,6 +59,13 @@ class Game:
             self.players.pop(self.players.index(player))
         if len(self.players) == 0:
             games.pop(self.id)
+        player.game = None
+
+    def __del__(self):
+        for pl in self.players:
+            pl.game = None
+        self.players = []
+        games.pop(self.id)
 
     def __str__(self):
         return f"{self.id}: {self.creator.nickname}"
@@ -111,7 +118,10 @@ def handle2(player: Player):
                     player.set_game(game)
                 print(games)
             elif "leave" in message:
-                print("leave")
+                game_broadcast(player.game, "Leave")
+                player.game.remove_player(player)
+                print(games)
+
             elif "Button" in message:
                 if player.game is not None:
                     game_broadcast(player.game, message)
@@ -129,10 +139,9 @@ def handle2(player: Player):
             game = player.game
             if game is not None:
                 game.remove_player(player)
-                game_broadcast(game, "Wait for new opponent...")
+                game_broadcast(game, "Leave")
             print(player.nickname + ":deleted")
             players.pop(player.id)
-
             break
 
 

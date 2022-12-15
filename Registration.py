@@ -31,6 +31,8 @@ class ThreadForFunc(QThread):
                     self.mysignal.emit(message_from_server)
                 elif "Restart" in message_from_server:
                     self.mysignal.emit(message_from_server)
+                elif "Leave" in message_from_server:
+                    self.mysignal.emit("Leave")
                 else:
                     print(1)
             except:
@@ -86,6 +88,8 @@ class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
             self.gw.restart_game()
         elif value == "Restart2":
             self.gw.full_restart()
+        elif value == "Leave":
+            self.gw.leaved()
 
 
     def lets_game(self):
@@ -125,6 +129,10 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
 
         self.add_functions()
 
+    def leaved(self):
+        self.nullify()
+        rw.show()
+        self.close()
 
     def add_functions(self):
         self.pushButton.clicked.connect(lambda: self.setup_game(self.pushButton))
@@ -151,7 +159,7 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
     def surrender_in_game(self):
         self.count_for_leave += 1
         self.surrender_button.setStyleSheet("border-radius: 15px;background: #73AD21;border: 2px solid #FFFFFF; color: #FFFFFF")
-        self.surrender_button.setText("Sure?")
+        self.surrender_button.setText("Leave?")
         if self.count_for_leave == 2:
             client.send(f"{self.nickname}:leave".encode("ascii"))
             self.moveLabel.setText("conceded")
