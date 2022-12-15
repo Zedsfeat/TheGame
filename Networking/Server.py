@@ -5,7 +5,7 @@ import threading
 import time
 
 host = '127.0.0.1'
-port = 5063
+port = 5072
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((host, port))
@@ -135,8 +135,12 @@ def handle2(player: Player):
                     game_broadcast(player.game, message + "1")
                 if player.game.restart_count == 2:
                     player.game.restart_count = 0
-                    game_broadcast(player.game, message+"2")
-                    
+                    game_broadcast(player.game, message + "2")
+            elif "wins" in message:
+                game_broadcast(player.game, message)
+            elif "Draw" in message:
+                game_broadcast(player.game, message)
+
         except:
             game = player.game
             if game is not None:

@@ -13,6 +13,8 @@ from UI_Registration import Ui_RegistrationView
 
 STARTER = None
 
+nickname_change = None
+
 class ThreadForFunc(QThread):
 
     mysignal = QtCore.pyqtSignal(str)
@@ -37,8 +39,11 @@ class ThreadForFunc(QThread):
                     self.mysignal.emit("true")
                 elif "false" in message_from_server:
                     self.mysignal.emit("false")
-                else:
-                    print(1)
+
+                elif "wins" in message_from_server:
+                    self.mysignal.emit(message_from_server)
+                elif "Draw" in message_from_server:
+                    self.mysignal.emit(message_from_server)
             except:
                 print("Error!")
                 return "error"
@@ -49,7 +54,7 @@ class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-
+        self.nickname_change = None
         self.count = 0
 
         self.thread = None
@@ -58,9 +63,12 @@ class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
 
 
     def add_functions(self):
+        global nickname_change
+
         if self.nickname_line_edit.text() != "":
 
             nickname = self.nickname_line_edit.text()
+            nickname_change = nickname
             self.gw = Game(nickname)
             client.send(nickname.encode("ascii"))
             self.gw.nameLabel.setText(f"{nickname}'s")
@@ -98,6 +106,15 @@ class Registration(QtWidgets.QMainWindow, Ui_RegistrationView):
             self.gw.enable_all()
         elif value == "false":
             self.gw.block_all()
+        elif "wins" in value:
+            # TODO Блокировка всех кнопок
+            if self.gw.queue_array[-1].text() == value.split()[-1]:
+                self.gw.nameLabel.setText(f"{value.split()[0]}")
+                self.gw.moveLabel.setText("wins 🥳")
+        elif "Draw" in value:
+            # TODO Блокировка всех кнопок
+            self.gw.nameLabel.setText(f"{value}")
+            self.gw.moveLabel.setText("")
 
 
     def lets_game(self):
@@ -207,6 +224,7 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
         self.count_for_restart = 0
         for k in self.buttons_dict.keys():
             self.buttons_dict[k] = self.buttons_dict[k].split()[0]
+        self.nameLabel.setText(f"{nickname_change}")
 
 
     def setup_game(self, button: QtWidgets.QPushButton):
@@ -240,6 +258,8 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
 
                 if len(self.queue_array) == 16 and self.flag_for_win:
                     self.nameLabel.setText("Draw")
+                    time.sleep(0.2)
+                    client.send(self.nameLabel.text().encode("ascii"))
                     self.moveLabel.setText("")
 
                 else:
@@ -283,6 +303,9 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
                     or  self.queue_dict[self.pushButton_13] + self.queue_dict[self.pushButton_11] + self.queue_dict[self.pushButton_6] + self.queue_dict[self.pushButton_4] == "XXXX":
                 self.nameLabel.setText(f"{self.nameLabel.text()[0:-2]}")
                 self.moveLabel.setText("wins 🥳")
+                nickname = self.nameLabel.text()
+                time.sleep(0.2)
+                client.send((nickname + " wins X").encode("ascii"))
                 self.flag_for_win = False
                 self.flag_for_cell_empty = False
             elif self.queue_dict[self.pushButton] + self.queue_dict[self.pushButton_2] + self.queue_dict[self.pushButton_3] + self.queue_dict[self.pushButton_4] == "OOOO" \
@@ -297,6 +320,9 @@ class Game(QtWidgets.QMainWindow, Ui_GameWindow):
                     or  self.queue_dict[self.pushButton_13] + self.queue_dict[self.pushButton_11] + self.queue_dict[self.pushButton_6] + self.queue_dict[self.pushButton_4] == "OOOO":
                 self.nameLabel.setText(f"{self.nameLabel.text()[0:-2]}")
                 self.moveLabel.setText("wins 🥳")
+                nickname = self.nameLabel.text()
+                time.sleep(0.2)
+                client.send((nickname + " wins O").encode("ascii"))
                 self.flag_for_win = False
                 self.flag_for_cell_empty = False
         else:
